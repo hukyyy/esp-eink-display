@@ -15,6 +15,10 @@ pub struct WifiConnection {
 }
 
 impl WifiConnection {
+    /// Returns an active wifi connection
+    ///
+    /// # Panics
+    /// If connection to wifi using credentials stored in the environment fails.
     pub fn new(
         modem: Modem,
         sys_loop: EspSystemEventLoop,
@@ -36,9 +40,11 @@ impl WifiConnection {
     }
 }
 
+/// Connects to wifi using credentials stored in the envirnoment.
 fn connect_wifi(wifi: &mut BlockingWifi<EspWifi>) -> anyhow::Result<()> {
     const SSID: &str = env!("SSID");
     const PASSWORD: &str = env!("PASSWORD");
+
     let wifi_configuration: Configuration = Configuration::Client(ClientConfiguration {
         ssid: SSID.try_into().expect("Failed to get SSID."),
         bssid: None,
