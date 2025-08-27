@@ -14,7 +14,7 @@ pub struct InternalLed {
     tx: Sender<LedProgram>,
 }
 
-impl<'a> InternalLed {
+impl InternalLed {
     pub fn new(gpio2: Gpio2) -> InternalLed {
         let (tx, rx) = mpsc::channel();
         let mut pin = PinDriver::output(gpio2).unwrap();

@@ -13,7 +13,7 @@ mod layouts;
 mod widgets;
 mod wifi;
 
-use crate::display::Display;
+use crate::display::{ControlPins, Display, SpiPins};
 use crate::internal_led::{InternalLed, LedProgram};
 use crate::layouts::JokeLayout;
 use crate::widgets::Widget;
@@ -38,17 +38,21 @@ fn main() -> anyhow::Result<()> {
 
     // ================= EPD ===================
 
-    let mut display = Display::new(
-        peripherals.spi2,
-        peripherals.pins.gpio14.into(),
-        peripherals.pins.gpio13.into(),
-        peripherals.pins.gpio12.into(),
-        peripherals.pins.gpio15.into(),
-        peripherals.pins.gpio27.into(),
-        peripherals.pins.gpio26.into(),
-        peripherals.pins.gpio25.into(),
-        peripherals.pins.gpio33.into(),
-    )?;
+    let spi_pins = SpiPins {
+        sclk_pin: peripherals.pins.gpio14.into(),
+        sdo_pin: peripherals.pins.gpio13.into(),
+        sdi_pin: peripherals.pins.gpio12.into(),
+        cs_pin: peripherals.pins.gpio15.into(),
+    };
+
+    let control_pins = ControlPins {
+        busy_pin: peripherals.pins.gpio27.into(),
+        dc_pin: peripherals.pins.gpio26.into(),
+        rst_pin: peripherals.pins.gpio25.into(),
+        pwr_pin: peripherals.pins.gpio33.into(),
+    };
+
+    let mut display = Display::new(peripherals.spi2, spi_pins, control_pins)?;
 
     let mut joke_layout = JokeLayout::new();
 

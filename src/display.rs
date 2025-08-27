@@ -17,36 +17,43 @@ use log::info;
 
 use crate::widgets::Widget;
 
+type SpiDevice<'a> = SpiDeviceDriver<'a, SpiDriver<'a>>;
+type InputPin<'a> = PinDriver<'a, AnyIOPin, Input>;
+type OutputPin<'a> = PinDriver<'a, AnyIOPin, Output>;
+type EpdDriver<'a> = Epd7in5<SpiDevice<'a>, InputPin<'a>, OutputPin<'a>, OutputPin<'a>, Delay>;
+
+pub struct SpiPins {
+    pub sclk_pin: AnyIOPin,
+    pub sdo_pin: AnyIOPin,
+    pub sdi_pin: AnyIOPin,
+    pub cs_pin: AnyIOPin,
+}
+
+pub struct ControlPins {
+    pub busy_pin: AnyIOPin,
+    pub dc_pin: AnyIOPin,
+    pub rst_pin: AnyIOPin,
+    pub pwr_pin: AnyIOPin,
+}
+
 pub struct Display<'a> {
-    _pwr: PinDriver<'a, AnyIOPin, Output>,
+    _pwr: OutputPin<'a>,
     delay: Delay,
-    epd7in5: Epd7in5<
-        SpiDeviceDriver<'a, SpiDriver<'a>>,
-        PinDriver<'a, AnyIOPin, Input>,
-        PinDriver<'a, AnyIOPin, Output>,
-        PinDriver<'a, AnyIOPin, Output>,
-        Delay,
-    >,
+    epd7in5: EpdDriver<'a>,
     display: Box<Display7in5>,
-    spi_device: SpiDeviceDriver<'a, SpiDriver<'a>>,
+    spi_device: SpiDevice<'a>,
 }
 
 impl<'a> Display<'a> {
     pub fn new(
         spi: SPI2,
-        sclk_pin: AnyIOPin,
-        sdo_pin: AnyIOPin,
-        sdi_pin: AnyIOPin,
-        cs_pin: AnyIOPin,
-        busy_pin: AnyIOPin,
-        dc_pin: AnyIOPin,
-        rst_pin: AnyIOPin,
-        pwr_pin: AnyIOPin,
+        spi_pins: SpiPins,
+        control_pins: ControlPins,
     ) -> anyhow::Result<Display<'a>> {
-        let busy = PinDriver::input(busy_pin)?;
-        let dc = PinDriver::output(dc_pin)?;
-        let mut rst = PinDriver::output(rst_pin)?;
-        let mut pwr = PinDriver::output(pwr_pin)?;
+        let busy = PinDriver::input(control_pins.busy_pin)?;
+        let dc = PinDriver::output(control_pins.dc_pin)?;
+        let mut rst = PinDriver::output(control_pins.rst_pin)?;
+        let mut pwr = PinDriver::output(control_pins.pwr_pin)?;
 
         let mut delay = Delay::new_default();
 
@@ -67,9 +74,16 @@ impl<'a> Display<'a> {
 
         let spi_driver_config = SpiDriverConfig::new();
 
-        let spi_driver = SpiDriver::new(spi, sclk_pin, sdo_pin, Some(sdi_pin), &spi_driver_config)?;
+        let spi_driver = SpiDriver::new(
+            spi,
+            spi_pins.sclk_pin,
+            spi_pins.sdo_pin,
+            Some(spi_pins.sdi_pin),
+            &spi_driver_config,
+        )?;
 
-        let mut spi_device = SpiDeviceDriver::new(spi_driver, Some(cs_pin), &spi_device_config)?;
+        let mut spi_device =
+            SpiDeviceDriver::new(spi_driver, Some(spi_pins.cs_pin), &spi_device_config)?;
 
         info!("SPI configured");
 
