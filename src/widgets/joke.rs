@@ -12,19 +12,10 @@ use crate::{widgets::Widget, wifi::WifiConnection};
 
 const PROGRAMMING_JOKE_URL: &str = "https://v2.jokeapi.dev/joke/Programming?type=single";
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Default)]
 struct JokeData {
     error: bool,
     joke: String,
-}
-
-impl JokeData {
-    fn new() -> Self {
-        JokeData {
-            error: false,
-            joke: String::from(""),
-        }
-    }
 }
 
 fn fetch_data(wifi_connection: &mut WifiConnection, joke_data: &mut JokeData) {
@@ -54,7 +45,7 @@ pub struct JokeFullWidget {
 impl JokeFullWidget {
     pub fn new() -> Self {
         JokeFullWidget {
-            data: JokeData::new(),
+            data: JokeData::default(),
         }
     }
 }
