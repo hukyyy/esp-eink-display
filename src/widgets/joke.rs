@@ -60,7 +60,7 @@ impl JokeFullWidget {
 }
 
 impl Widget for JokeFullWidget {
-    fn refresh(&mut self, wifi_connection: &mut WifiConnection) {
+    fn refresh_data(&mut self, wifi_connection: &mut WifiConnection) {
         fetch_data(wifi_connection, &mut self.data);
     }
 

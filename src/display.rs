@@ -15,7 +15,7 @@ use esp_idf_svc::hal::{
 };
 use log::info;
 
-use crate::layouts::Layout;
+use crate::widgets::Widget;
 
 pub struct Display<'a> {
     _pwr: PinDriver<'a, AnyIOPin, Output>,
@@ -96,7 +96,7 @@ impl<'a> Display<'a> {
         Ok(())
     }
 
-    pub fn draw_layout(&mut self, layout: &impl Layout) {
+    pub fn draw_layout(&mut self, layout: &impl Widget) {
         layout.draw(&mut self.display);
     }
 

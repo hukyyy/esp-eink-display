@@ -15,7 +15,8 @@ mod wifi;
 
 use crate::display::Display;
 use crate::internal_led::{InternalLed, LedProgram};
-use crate::layouts::{JokeLayout, Layout};
+use crate::layouts::JokeLayout;
+use crate::widgets::Widget;
 
 fn main() -> anyhow::Result<()> {
     initialise_esp32();

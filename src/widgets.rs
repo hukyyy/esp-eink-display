@@ -5,6 +5,6 @@ pub mod joke;
 use crate::wifi::WifiConnection;
 
 pub trait Widget {
-    fn refresh(&mut self, wifi_connection: &mut WifiConnection);
+    fn refresh_data(&mut self, wifi_connection: &mut WifiConnection);
     fn draw(&self, display: &mut Box<Display7in5>);
 }
