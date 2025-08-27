@@ -1,4 +1,6 @@
-use embedded_graphics::{mono_font::MonoTextStyleBuilder, prelude::*};
+use embedded_graphics::prelude::*;
+use std::thread;
+use std::time::Duration;
 
 use epd_waveshare::{
     color::Color,
@@ -16,6 +18,7 @@ use log::info;
 use crate::layouts::Layout;
 
 pub struct Display<'a> {
+    _pwr: PinDriver<'a, Gpio33, Output>,
     delay: Delay,
     epd7in5: Epd7in5<
         SpiDeviceDriver<'a, SpiDriver<'a>>,
@@ -70,10 +73,17 @@ impl<'a> Display<'a> {
 
         info!("SPI configured");
 
-        let epd7in5 = Epd7in5::new(&mut spi_device, busy, dc, rst, &mut delay, None)?;
-        let display = Box::new(Display7in5::default());
+        let mut epd7in5 = Epd7in5::new(&mut spi_device, busy, dc, rst, &mut delay, None)?;
+        let mut display = Box::new(Display7in5::default());
+
+        info!("Clearing display to WHITE...");
+        display.clear(Color::Black)?;
+        epd7in5.update_and_display_frame(&mut spi_device, display.buffer(), &mut delay)?;
+
+        thread::sleep(Duration::from_millis(100));
 
         Ok(Display {
+            _pwr: pwr,
             delay,
             epd7in5,
             display,
@@ -86,7 +96,7 @@ impl<'a> Display<'a> {
         Ok(())
     }
 
-    pub fn draw_layout(&mut self, layout: Box<&dyn Layout>) {
+    pub fn draw_layout(&mut self, layout: &impl Layout) {
         layout.draw(&mut self.display);
     }
 
