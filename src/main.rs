@@ -8,11 +8,13 @@ use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
-use internal_led::{InternalLed, LedProgram};
-
 mod display;
 mod internal_led;
+mod layouts;
+mod widgets;
 mod wifi;
+
+use internal_led::{InternalLed, LedProgram};
 
 fn main() -> ! {
     initialise_esp32();
