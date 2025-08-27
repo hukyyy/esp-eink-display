@@ -1,3 +1,4 @@
+use epd_waveshare::color::Color;
 use esp_idf_svc::eventloop::EspSystemEventLoop;
 use esp_idf_svc::hal::{gpio::Level, peripherals::Peripherals};
 use esp_idf_svc::nvs::EspDefaultNvsPartition;
@@ -6,24 +7,26 @@ use log::info;
 use std::thread;
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
-
 mod display;
 mod internal_led;
 mod layouts;
 mod widgets;
 mod wifi;
 
-use internal_led::{InternalLed, LedProgram};
+use crate::display::Display;
+use crate::internal_led::{InternalLed, LedProgram};
+use crate::layouts::{JokeLayout, Layout};
 
-fn main() -> ! {
+fn main() -> anyhow::Result<()> {
     initialise_esp32();
 
-    let peripherals = Peripherals::take().unwrap();
-    let sys_loop = EspSystemEventLoop::take().unwrap();
-    let nvs = EspDefaultNvsPartition::take().unwrap();
+    let peripherals = Peripherals::take()?;
+    let sys_loop = EspSystemEventLoop::take()?;
+    let nvs = EspDefaultNvsPartition::take()?;
 
     let mut internal_led = InternalLed::new(peripherals.pins.gpio2);
+
+    // =============== Wifi connection ===============
 
     internal_led.set_program(LedProgram::Blink(Duration::from_millis(500)));
 
@@ -32,25 +35,39 @@ fn main() -> ! {
 
     internal_led.set_program(LedProgram::Stable(Level::High));
 
+    // ================= EPD ===================
+
+    let mut display = Display::new(
+        peripherals.spi2,
+        peripherals.pins.gpio14,
+        peripherals.pins.gpio13,
+        peripherals.pins.gpio12,
+        peripherals.pins.gpio15,
+        peripherals.pins.gpio27,
+        peripherals.pins.gpio26,
+        peripherals.pins.gpio25,
+        peripherals.pins.gpio33,
+    )?;
+
+    let mut joke_layout = JokeLayout::new();
+
+    info!("Clearing display");
+    display.clear_display(Color::Black)?;
+    info!("Updating display");
+    display.update_and_display()?;
+
     loop {
         thread::sleep(Duration::from_millis(5000));
-        info!("Getting joke!!!");
 
-        if let Ok(joke_json) =
-            wifi_connection.get_request("https://v2.jokeapi.dev/joke/Programming?type=single")
-        {
-            let joke: JokeResponse = serde_json::from_str(&joke_json).unwrap();
+        info!("Getting joke...");
+        joke_layout.refresh_data(&mut wifi_connection);
 
-            match joke.error {
-                false => {
-                    info!("Got a joke!");
-                    info!("{}", joke.joke);
-                }
-                true => {
-                    info!("Failed to get a joke");
-                }
-            }
-        }
+        info!("About to clear display...");
+        display.clear_display(Color::Black)?;
+        info!("About to draw layout");
+        display.draw_layout(&joke_layout);
+        info!("About to update display ...");
+        display.update_and_display()?;
     }
 }
 
@@ -61,10 +78,4 @@ fn initialise_esp32() {
 
     // Bind the log crate to the ESP Logging facilities
     esp_idf_svc::log::EspLogger::initialize_default();
-}
-
-#[derive(Deserialize, Serialize)]
-struct JokeResponse {
-    error: bool,
-    joke: String,
 }
