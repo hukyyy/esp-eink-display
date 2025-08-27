@@ -7,10 +7,10 @@ use epd_waveshare::{
     epd7in5_v2::{Display7in5, Epd7in5},
     prelude::WaveshareDisplay,
 };
-use esp_idf_svc::hal::gpio::{Input, Output};
+use esp_idf_svc::hal::gpio::{AnyIOPin, Input, Output};
 use esp_idf_svc::hal::{
     delay::Delay,
-    gpio::{Gpio12, Gpio13, Gpio14, Gpio15, Gpio25, Gpio26, Gpio27, Gpio33, PinDriver},
+    gpio::PinDriver,
     spi::{config::MODE_0, SpiConfig, SpiDeviceDriver, SpiDriver, SpiDriverConfig, SPI2},
 };
 use log::info;
@@ -18,13 +18,13 @@ use log::info;
 use crate::layouts::Layout;
 
 pub struct Display<'a> {
-    _pwr: PinDriver<'a, Gpio33, Output>,
+    _pwr: PinDriver<'a, AnyIOPin, Output>,
     delay: Delay,
     epd7in5: Epd7in5<
         SpiDeviceDriver<'a, SpiDriver<'a>>,
-        PinDriver<'a, Gpio27, Input>,
-        PinDriver<'a, Gpio26, Output>,
-        PinDriver<'a, Gpio25, Output>,
+        PinDriver<'a, AnyIOPin, Input>,
+        PinDriver<'a, AnyIOPin, Output>,
+        PinDriver<'a, AnyIOPin, Output>,
         Delay,
     >,
     display: Box<Display7in5>,
@@ -34,14 +34,14 @@ pub struct Display<'a> {
 impl<'a> Display<'a> {
     pub fn new(
         spi: SPI2,
-        sclk_pin: Gpio14,
-        sdo_pin: Gpio13,
-        sdi_pin: Gpio12,
-        cs_pin: Gpio15,
-        busy_pin: Gpio27,
-        dc_pin: Gpio26,
-        rst_pin: Gpio25,
-        pwr_pin: Gpio33,
+        sclk_pin: AnyIOPin,
+        sdo_pin: AnyIOPin,
+        sdi_pin: AnyIOPin,
+        cs_pin: AnyIOPin,
+        busy_pin: AnyIOPin,
+        dc_pin: AnyIOPin,
+        rst_pin: AnyIOPin,
+        pwr_pin: AnyIOPin,
     ) -> anyhow::Result<Display<'a>> {
         let busy = PinDriver::input(busy_pin)?;
         let dc = PinDriver::output(dc_pin)?;

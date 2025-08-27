@@ -39,14 +39,14 @@ fn main() -> anyhow::Result<()> {
 
     let mut display = Display::new(
         peripherals.spi2,
-        peripherals.pins.gpio14,
-        peripherals.pins.gpio13,
-        peripherals.pins.gpio12,
-        peripherals.pins.gpio15,
-        peripherals.pins.gpio27,
-        peripherals.pins.gpio26,
-        peripherals.pins.gpio25,
-        peripherals.pins.gpio33,
+        peripherals.pins.gpio14.into(),
+        peripherals.pins.gpio13.into(),
+        peripherals.pins.gpio12.into(),
+        peripherals.pins.gpio15.into(),
+        peripherals.pins.gpio27.into(),
+        peripherals.pins.gpio26.into(),
+        peripherals.pins.gpio25.into(),
+        peripherals.pins.gpio33.into(),
     )?;
 
     let mut joke_layout = JokeLayout::new();
